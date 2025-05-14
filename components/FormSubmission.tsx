@@ -3,9 +3,12 @@
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { postData } from "@/app/actions/supabase";
 
-export default function SubmitForm() {
+interface SubmitFormProps {
+  postData: (data: string) => Promise<boolean>;
+}
+
+export default function SubmitForm({ postData }: SubmitFormProps) {
   const [data, setData] = useState("");
   const [isPending, startTransition] = useTransition();
 

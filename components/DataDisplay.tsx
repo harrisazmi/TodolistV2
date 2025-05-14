@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { deleteData } from "@/app/actions/supabase";
 import { createBrowserClient } from "@supabase/ssr";
 
 type Task = {
@@ -12,10 +11,20 @@ type Task = {
 
 interface DataDisplayProps {
   tasks: Task[];
+  tableFrom: string;
+  deleteData: (id: number) => Promise<boolean>;
 }
 
-export default function DataDisplayWrapper({ tasks }: DataDisplayProps) {
+export default function DataDisplayWrapper({
+  tasks,
+  tableFrom,
+  deleteData,
+}: DataDisplayProps) {
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
+
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -27,7 +36,7 @@ export default function DataDisplayWrapper({ tasks }: DataDisplayProps) {
       .channel("realtime-tasks")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "Todos" },
+        { event: "*", schema: "public", table: tableFrom },
         (payload) => {
           const { eventType, new: newRow, old: oldRow } = payload;
 
@@ -63,6 +72,7 @@ export default function DataDisplayWrapper({ tasks }: DataDisplayProps) {
             key={task.id.toString()}
             taskID={task.id}
             taskInfo={task.info}
+            deleteData={deleteData}
           />
         ))}
       </div>
@@ -73,9 +83,11 @@ export default function DataDisplayWrapper({ tasks }: DataDisplayProps) {
 function DataDisplay({
   taskID,
   taskInfo,
+  deleteData,
 }: {
   taskID: number;
   taskInfo: string;
+  deleteData: (id: number) => Promise<boolean>;
 }) {
   const [checked, setChecked] = useState(false);
 

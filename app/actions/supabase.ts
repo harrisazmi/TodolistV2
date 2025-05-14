@@ -26,19 +26,6 @@ export async function createClient() {
   );
 }
 
-// Function to fetch all data from the "Todos" table
-export async function getAllData() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("Todos").select();
-
-  if (error) {
-    console.error("Error fetching data:", error);
-    return [];
-  }
-
-  return data;
-}
-
 // Function to delete data from the "Todos" table
 export async function deleteData(id: number) {
   const supabase = await createClient();
@@ -53,10 +40,38 @@ export async function deleteData(id: number) {
   return true;
 }
 
+// Function to delete data from the "todobuy" table
+export async function deleteDataBuy(id: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("todobuy").delete().eq("id", id);
+  revalidatePath("/");
+
+  if (error) {
+    console.error("Error deleting data:", error);
+    return false;
+  }
+
+  return true;
+}
+
 // Function to add data to the "Todos" table
 export async function postData(info: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("Todos").insert([{ info }]);
+  revalidatePath("/");
+
+  if (error) {
+    console.error("Error adding data:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// Function to add data to the "todobuy" table
+export async function postDataBuy(info: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("todobuy").insert([{ info }]);
   revalidatePath("/");
 
   if (error) {
