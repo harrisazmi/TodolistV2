@@ -33,7 +33,7 @@ export default function DataDisplayWrapper({
     );
 
     const channel = supabase
-      .channel("realtime-tasks")
+      .channel(`realtime-${tableFrom}`) // unique per table
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: tableFrom },
