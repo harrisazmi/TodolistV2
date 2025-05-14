@@ -3,16 +3,12 @@ import SubmitForm from "@/components/FormSubmission";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { createClient } from "./actions/supabase";
 
+export const runtime = "edge";
+
 export default async function TodosPage() {
   const supabase = await createClient();
   const { data: todos, error } = await supabase.from("Todos").select();
-  // const channel = supabase
-  //   .channel("table-db-changes")
-  //   .on(
-  //     "postgres_changes",
-  //     { event: "*", schema: "public", table: "Todos" },
-  //     (payload) => {}
-  //   ).subscribe;
+
   if (error) {
     return <pre>Error: {error.message}</pre>;
   }
