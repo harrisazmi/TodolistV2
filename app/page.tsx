@@ -1,11 +1,21 @@
 import DataDisplayWrapper from "@/components/DataDisplay";
 import SubmitForm from "@/components/FormSubmission";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import getAllData from "./actions/getData";
+import { createClient } from "./actions/supabase";
 
-export default async function Home() {
-  const data = await getAllData();
-  const tasks: { _id: string; info: string }[] = await data.json();
+export default async function TodosPage() {
+  const supabase = await createClient();
+  const { data: todos, error } = await supabase.from("Todos").select();
+  // const channel = supabase
+  //   .channel("table-db-changes")
+  //   .on(
+  //     "postgres_changes",
+  //     { event: "*", schema: "public", table: "Todos" },
+  //     (payload) => {}
+  //   ).subscribe;
+  if (error) {
+    return <pre>Error: {error.message}</pre>;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -15,7 +25,7 @@ export default async function Home() {
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <SubmitForm></SubmitForm>
-          <DataDisplayWrapper tasks={tasks} />
+          <DataDisplayWrapper tasks={todos} />
         </CardContent>
       </Card>
     </div>

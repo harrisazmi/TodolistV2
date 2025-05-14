@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import deleteData from "@/app/actions/deleteData";
+import { deleteData } from "@/app/actions/supabase";
+import { createBrowserClient } from "@supabase/ssr";
 
 type Task = {
-  _id: string;
+  id: number;
   info: string;
 };
 
@@ -14,12 +15,55 @@ interface DataDisplayProps {
 }
 
 export default function DataDisplayWrapper({ tasks }: DataDisplayProps) {
+  const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const channel = supabase
+      .channel("realtime-tasks")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Todos" },
+        (payload) => {
+          const { eventType, new: newRow, old: oldRow } = payload;
+
+          setLocalTasks((prev) => {
+            if (eventType === "INSERT") {
+              return [...prev, newRow as Task];
+            }
+            if (eventType === "UPDATE") {
+              return prev.map((task) =>
+                task.id === (newRow as Task).id ? (newRow as Task) : task
+              );
+            }
+            if (eventType === "DELETE") {
+              return prev.filter((task) => task.id !== (oldRow as Task).id);
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 max-w-full">
       <h1 className="text-xl">Tasks</h1>
       <div className="flex flex-col gap-2">
-        {tasks.map((task) => (
-          <DataDisplay key={task._id} taskID={task._id} taskInfo={task.info} />
+        {localTasks.map((task) => (
+          <DataDisplay
+            key={task.id.toString()}
+            taskID={task.id}
+            taskInfo={task.info}
+          />
         ))}
       </div>
     </div>
@@ -30,7 +74,7 @@ function DataDisplay({
   taskID,
   taskInfo,
 }: {
-  taskID: string;
+  taskID: number;
   taskInfo: string;
 }) {
   const [checked, setChecked] = useState(false);

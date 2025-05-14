@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import postData from "@/app/actions/postData";
+import { postData } from "@/app/actions/supabase";
 
 export default function SubmitForm() {
   const [data, setData] = useState("");
